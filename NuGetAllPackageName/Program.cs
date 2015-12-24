@@ -47,7 +47,7 @@ namespace NuGetAllPackageName
             }
             catch (Exception e)
             {
-                Console.WriteLine("READ error");
+                Console.WriteLine("READ error {0}",e.Message);
                 return string.Empty;
             }
             string pageHtml = Encoding.UTF8.GetString(pageData);
@@ -86,11 +86,13 @@ namespace NuGetAllPackageName
                 AutoResetEvent waitHandler = new AutoResetEvent(false);
                 waitHandler.Set();
                 var parser = Parser.CreateParser(htmlPackageList, null);
-                var array = parser.ExtractAllNodesThatMatch(new TagNameFilter("a")).ToNodeArray();
-                var atags = array.Where(x =>
-                    (x as ATag).Link.StartsWith("/packages/") &&
-                    (x as ATag).Link.EndsWith("/")
-                ).ToList();
+                var array = parser.ExtractAllNodesThatMatch(new TagNameFilter("h1")).ToNodeArray();
+                var atags = array
+                    .Where(x =>
+                        ((x as HeadingTag).FirstChild as ATag).Link.StartsWith("/packages/")
+                    )
+                    .Select(x => x.FirstChild as ATag).ToList();
+
                 waitHandler.WaitOne();
 
                 Console.WriteLine(" Get package number : {0}", atags.Count);
@@ -102,12 +104,17 @@ namespace NuGetAllPackageName
                 {
                     var a = atag as ATag;
                     var name = a.Link.Substring(10, a.Link.Length - 11);
+                    if (name.Contains('/'))
+                    {
+                        var namespans = name.Split('/');
+                        name = namespans[0];
+                    }
+
                     names.Add(name);
                 }
                 try
                 {
-
-                    File.WriteAllLines(outFileFullPath, names.ToArray());
+                    File.AppendAllLines(outFileFullPath, names.ToArray());
                     Console.WriteLine("# {0} Package Name Wrote.", atags.Count);
                 }
                 catch (Exception ex)
