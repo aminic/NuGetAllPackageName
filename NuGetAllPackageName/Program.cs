@@ -122,8 +122,8 @@ namespace NuGetAllPackageName
                     Console.WriteLine("#Package Name Write error {0}", ex.Message);
                 }
 
-                var time = random.Next(4, 10);
-                System.Threading.Thread.Sleep(time * 1000);
+                //var time = random.Next(4, 10);
+                //System.Threading.Thread.Sleep(time * 1000);
 
                 i++;
             }
